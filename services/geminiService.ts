@@ -1,22 +1,21 @@
 
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 
-const API_KEY = process.env.API_KEY || '';
-
 export class GeminiService {
-  private ai: GoogleGenAI;
   private chat: Chat | null = null;
 
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: API_KEY });
+  private getClient() {
+    // Creating a fresh instance to ensure the most up-to-date API key is used
+    return new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   public initChat(systemInstruction: string) {
-    this.chat = this.ai.chats.create({
+    const ai = this.getClient();
+    this.chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
       config: {
         systemInstruction,
-        temperature: 0.9,
+        temperature: 1.0,
         topP: 0.95,
       },
     });
@@ -33,13 +32,13 @@ export class GeminiService {
     const result = await this.chat.sendMessageStream({ message });
     for await (const chunk of result) {
       const c = chunk as GenerateContentResponse;
-      yield c.text;
+      if (c.text) yield c.text;
     }
   }
 
-  // Voice logic placeholder for integration in the components
-  public getLiveConnection(config: any) {
-    return this.ai.live.connect(config);
+  public async connectLive(config: any) {
+    const ai = this.getClient();
+    return ai.live.connect(config);
   }
 }
 
