@@ -9,9 +9,11 @@ interface ChatInterfaceProps {
   onBack: () => void;
   onMenuOpen: () => void;
   userName: string;
+  isPremium: boolean;
+  onUpgrade: () => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ profile, onBack, onMenuOpen, userName }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ profile, onBack, onMenuOpen, userName, isPremium, onUpgrade }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -40,6 +42,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ profile, onBack, o
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleVoiceCallClick = () => {
+    if (isPremium) {
+      setShowVoiceCall(true);
+    } else {
+      onUpgrade();
+    }
   };
 
   const handleSend = async (e?: React.FormEvent) => {
@@ -112,17 +122,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ profile, onBack, o
         </div>
         <div className="flex gap-3">
           <button 
-            onClick={() => setShowVoiceCall(true)}
-            className="p-4 bg-gradient-to-br from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 rounded-2xl text-white shadow-xl shadow-pink-600/20 transition-all active:scale-90"
+            onClick={handleVoiceCallClick}
+            className={`p-4 bg-gradient-to-br rounded-2xl text-white shadow-xl transition-all active:scale-90 ${isPremium ? 'from-pink-600 to-rose-500 hover:from-pink-500 hover:to-rose-400 shadow-pink-600/20' : 'from-yellow-600 to-orange-500 hover:from-yellow-500 hover:to-orange-400 shadow-yellow-600/20'}`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-            </svg>
+            {isPremium ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+              </svg>
+            ) : (
+              <div className="flex items-center gap-2">
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                 </svg>
+                 <span className="text-[10px] font-black uppercase tracking-widest">Upgrade</span>
+              </div>
+            )}
           </button>
-          <button 
-            onClick={onMenuOpen}
-            className="p-4 glass hover:bg-white/10 rounded-2xl text-white/70 hover:text-white transition-all active:scale-90"
-          >
+          <button onClick={onMenuOpen} className="p-4 glass hover:bg-white/10 rounded-2xl text-white/70 hover:text-white transition-all active:scale-90">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
             </svg>
@@ -174,13 +190,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ profile, onBack, o
               placeholder="মন খুলে কথা বলো..."
               className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-6 py-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-pink-500/40 transition-all text-white placeholder:text-slate-600 pr-14"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-               <button type="button" className="text-slate-500 hover:text-pink-500 transition-colors p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-               </button>
-            </div>
           </div>
           <button 
             type="submit" 
@@ -194,12 +203,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ profile, onBack, o
         </form>
       </div>
 
-      {/* Voice Modal Overlay */}
       {showVoiceCall && (
-        <VoiceCallModal 
-          profile={profile} 
-          onClose={() => setShowVoiceCall(false)} 
-        />
+        <VoiceCallModal profile={profile} onClose={() => setShowVoiceCall(false)} />
       )}
     </div>
   );

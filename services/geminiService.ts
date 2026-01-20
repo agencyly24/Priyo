@@ -5,34 +5,54 @@ export class GeminiService {
   private chat: Chat | null = null;
 
   private getClient() {
-    // Creating a fresh instance to ensure the most up-to-date API key is used
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.error("API Key is missing. Ensure process.env.API_KEY is defined in vite.config.ts or build settings.");
+    }
+    return new GoogleGenAI({ apiKey: apiKey || "" });
   }
 
   public initChat(systemInstruction: string) {
-    const ai = this.getClient();
-    this.chat = ai.chats.create({
-      model: 'gemini-3-flash-preview',
-      config: {
-        systemInstruction,
-        temperature: 1.0,
-        topP: 0.95,
-      },
-    });
+    try {
+      const ai = this.getClient();
+      this.chat = ai.chats.create({
+        model: 'gemini-3-flash-preview',
+        config: {
+          systemInstruction,
+          temperature: 1.0,
+          topP: 0.95,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to initialize chat:", error);
+    }
   }
 
   public async sendMessage(message: string): Promise<string> {
-    if (!this.chat) throw new Error("Chat not initialized");
-    const response = await this.chat.sendMessage({ message });
-    return response.text || "দুঃখিত, আমি বুঝতে পারিনি।";
+    if (!this.chat) return "সার্ভার লোড হচ্ছে, দয়া করে একটু অপেক্ষা করুন।";
+    try {
+      const response = await this.chat.sendMessage({ message });
+      return response.text || "দুঃখিত, আমি বুঝতে পারিনি।";
+    } catch (error) {
+      console.error("Error sending message:", error);
+      return "কানেকশনে সমস্যা হচ্ছে। দয়া করে আবার চেষ্টা করো।";
+    }
   }
 
   public async *sendMessageStream(message: string) {
-    if (!this.chat) throw new Error("Chat not initialized");
-    const result = await this.chat.sendMessageStream({ message });
-    for await (const chunk of result) {
-      const c = chunk as GenerateContentResponse;
-      if (c.text) yield c.text;
+    if (!this.chat) {
+      yield "সার্ভার লোড হচ্ছে...";
+      return;
+    }
+    try {
+      const result = await this.chat.sendMessageStream({ message });
+      for await (const chunk of result) {
+        const c = chunk as GenerateContentResponse;
+        if (c.text) yield c.text;
+      }
+    } catch (error) {
+      console.error("Streaming error:", error);
+      yield "দুঃখিত, কিছু একটা ভুল হয়েছে।";
     }
   }
 

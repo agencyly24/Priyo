@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
-import { View } from '../types';
+import { View, UserProfile } from '../types';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   currentView: View;
   setView: (view: View) => void;
-  userName: string;
-  setUserName: (name: string) => void;
+  userProfile: UserProfile;
+  setUserProfile: (profile: UserProfile) => void;
   voiceEnabled: boolean;
   setVoiceEnabled: (enabled: boolean) => void;
   onLogout: () => void;
@@ -19,8 +19,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   currentView,
   setView,
-  userName,
-  setUserName,
+  userProfile,
+  setUserProfile,
   voiceEnabled,
   setVoiceEnabled,
   onLogout
@@ -35,7 +35,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       
       <div className="relative w-80 max-w-[85vw] h-full glass border-r border-white/10 flex flex-col shadow-2xl animate-in slide-in-from-left duration-300">
         <div className="p-8 border-b border-white/10 flex items-center justify-between">
-          <h2 className="text-3xl font-black text-gradient">Priyo</h2>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 p-0.5">
+              <img src={userProfile.avatar} className="h-full w-full rounded-full bg-slate-900" alt="User" />
+            </div>
+            <h2 className="text-2xl font-black text-gradient">Priyo</h2>
+          </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -58,24 +63,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {activeTab === 'nav' && (
             <div className="space-y-3">
-              <button 
-                onClick={() => { setView('landing'); onClose(); }}
-                className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'landing' ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30' : 'hover:bg-white/5 text-gray-400 hover:text-white'}`}
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
+              <button onClick={() => { setView('landing'); onClose(); }} className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'landing' ? 'bg-pink-600 text-white shadow-lg' : 'hover:bg-white/5 text-gray-400'}`}>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                 <span className="font-bold">হোম</span>
               </button>
-              <button 
-                onClick={() => { setView('profile-selection'); onClose(); }}
-                className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'profile-selection' ? 'bg-pink-600 text-white shadow-lg shadow-pink-600/30' : 'hover:bg-white/5 text-gray-400 hover:text-white'}`}
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+              <button onClick={() => { setView('subscription'); onClose(); }} className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'subscription' ? 'bg-yellow-600 text-white shadow-lg' : 'hover:bg-white/5 text-gray-400'}`}>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" /></svg>
+                <span className="font-bold">Upgrade Membership</span>
+              </button>
+              <button onClick={() => { setView('profile-selection'); onClose(); }} className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'profile-selection' ? 'bg-pink-600 text-white shadow-lg' : 'hover:bg-white/5 text-gray-400'}`}>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                 <span className="font-bold">সঙ্গী নির্বাচন</span>
               </button>
+              <button onClick={() => { setView('account'); onClose(); }} className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'account' ? 'bg-pink-600 text-white shadow-lg' : 'hover:bg-white/5 text-gray-400'}`}>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                <span className="font-bold">আমার প্রোফাইল</span>
+              </button>
+              
+              {userProfile.isAdmin && (
+                <div className="pt-6 border-t border-white/5">
+                  <p className="px-5 mb-2 text-[10px] font-black uppercase tracking-widest text-gray-600">Administrative</p>
+                  <button onClick={() => { setView('admin-panel'); onClose(); }} className={`w-full text-left p-5 rounded-2xl flex items-center gap-4 transition-all ${currentView === 'admin-panel' ? 'bg-blue-600 text-white shadow-lg' : 'hover:bg-white/5 text-blue-500'}`}>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    <span className="font-black">Admin Panel</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -83,13 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-8">
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">আপনার ডাকনাম</label>
-                <input 
-                  type="text" 
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="নাম দিন..."
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-700"
-                />
+                <input type="text" value={userProfile.name} onChange={(e) => setUserProfile({ ...userProfile, name: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white" />
               </div>
 
               <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/10">
@@ -97,21 +104,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-sm font-bold text-white uppercase tracking-wider">ভয়েস কল</p>
                   <p className="text-[10px] text-gray-500">কথা বলার অনুমতি</p>
                 </div>
-                <button 
-                  onClick={() => setVoiceEnabled(!voiceEnabled)}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all ${voiceEnabled ? 'bg-pink-600' : 'bg-gray-800'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${voiceEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                <button onClick={() => setVoiceEnabled(!voiceEnabled)} className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all ${voiceEnabled ? 'bg-pink-600' : 'bg-gray-800'}`}>
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${voiceEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
               </div>
 
-              <button 
-                onClick={() => { onLogout(); onClose(); }}
-                className="w-full p-5 rounded-2xl border border-red-500/20 text-red-500 font-bold hover:bg-red-500/10 transition-all flex items-center justify-center gap-3"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
+              <button onClick={() => { onLogout(); onClose(); }} className="w-full p-5 rounded-2xl border border-red-500/20 text-red-500 font-bold hover:bg-red-500/10 transition-all flex items-center justify-center gap-3">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 লগ-আউট করুন
               </button>
             </div>
@@ -121,15 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-5">
               <div className="p-6 bg-pink-600/10 border border-pink-500/20 rounded-3xl">
                 <h4 className="text-pink-400 font-black mb-3 text-sm uppercase tracking-widest">গোপনীয়তা</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  আপনার প্রতিটি আড্ডা এনক্রিপ্টেড। আমরা আপনার ব্যক্তিগত তথ্য কারো সাথে শেয়ার করি না।
-                </p>
-              </div>
-              <div className="p-6 bg-blue-600/10 border border-blue-500/20 rounded-3xl">
-                <h4 className="text-blue-400 font-black mb-3 text-sm uppercase tracking-widest">সতর্কবাণী</h4>
-                <p className="text-xs text-gray-400 leading-relaxed">
-                  প্রিয় একটি কৃত্রিম বুদ্ধিমত্তা। এটি আপনার মানসিক স্বাস্থ্যের উন্নতির জন্য তৈরি কিন্তু সত্যিকারের মানুষের বিকল্প নয়।
-                </p>
+                <p className="text-xs text-gray-400">আপনার প্রতিটি আড্ডা এনক্রিপ্টেড।</p>
               </div>
             </div>
           )}
