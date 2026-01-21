@@ -4,8 +4,13 @@ export enum PersonalityType {
   Romantic = 'Romantic & Flirty',
   Playful = 'Playful & Funny',
   Listener = 'Emotional Listener',
-  Nympho = 'Nympho',
-  Intellectual = 'Intellectual'
+  Intellectual = 'Intellectual',
+  Girlfriend = 'Girlfriend Mode',
+  Wife = 'Caring Wife',
+  Flirty = 'Flirty Girl',
+  Sexy = 'Sexy Girl',
+  Horny = 'Horny Mode',
+  Friend = 'Just Friend'
 }
 
 export type SubscriptionTier = 'Free' | 'Gold' | 'Diamond';

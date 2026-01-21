@@ -5,13 +5,23 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY),
+    // This ensures process.env.API_KEY is replaced with the actual string during build
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || ''),
   },
   server: {
     port: 3000
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    // Fixes the chunk size warning
+    chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', '@google/genai'],
+        },
+      },
+    },
   }
 });

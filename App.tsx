@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, GirlfriendProfile, UserProfile, PaymentRequest } from './types';
-import { PROFILES, APP_CONFIG } from './constants';
+import { View, GirlfriendProfile, UserProfile, PaymentRequest, Message } from './types';
+import { PROFILES as INITIAL_PROFILES, APP_CONFIG } from './constants';
 import { ProfileCard } from './components/ProfileCard';
 import { ChatInterface } from './components/ChatInterface';
 import { Sidebar } from './components/Sidebar';
@@ -22,7 +22,7 @@ const DEFAULT_USER: UserProfile = {
   joinedDate: new Date().toLocaleDateString(),
   tier: 'Free',
   isPremium: false,
-  isAdmin: true, // Defaulting to true for demo purposes to access Admin Panel
+  isAdmin: true, // For development access
   stats: {
     messagesSent: 0,
     hoursChatted: 0,
@@ -36,9 +36,19 @@ const App: React.FC = () => {
     return (savedView as View) || 'landing';
   });
   
+  const [profiles, setProfiles] = useState<GirlfriendProfile[]>(() => {
+    const savedProfiles = localStorage.getItem('priyo_dynamic_profiles');
+    return savedProfiles ? JSON.parse(savedProfiles) : INITIAL_PROFILES;
+  });
+
+  const [chatHistories, setChatHistories] = useState<Record<string, Message[]>>(() => {
+    const saved = localStorage.getItem('priyo_chat_histories');
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [selectedProfile, setSelectedProfile] = useState<GirlfriendProfile | null>(() => {
     const savedId = localStorage.getItem('priyo_selected_profile_id');
-    return PROFILES.find(p => p.id === savedId) || null;
+    return profiles.find(p => p.id === savedId) || null;
   });
 
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('priyo_is_logged_in') === 'true');
@@ -62,8 +72,16 @@ const App: React.FC = () => {
   }, [userProfile]);
 
   useEffect(() => {
+    localStorage.setItem('priyo_chat_histories', JSON.stringify(chatHistories));
+  }, [chatHistories]);
+
+  useEffect(() => {
     localStorage.setItem('priyo_payment_requests', JSON.stringify(paymentRequests));
   }, [paymentRequests]);
+
+  useEffect(() => {
+    localStorage.setItem('priyo_dynamic_profiles', JSON.stringify(profiles));
+  }, [profiles]);
 
   useEffect(() => {
     localStorage.setItem('priyo_voice_enabled', String(voiceEnabled));
@@ -125,6 +143,8 @@ const App: React.FC = () => {
     setHasConfirmedAge(false);
     setUserProfile(DEFAULT_USER);
     setSelectedProfile(null);
+    setProfiles(INITIAL_PROFILES);
+    setChatHistories({});
     setView('landing');
   };
 
@@ -138,6 +158,21 @@ const App: React.FC = () => {
       timestamp: new Date().toLocaleString()
     };
     setPaymentRequests([newRequest, ...paymentRequests]);
+  };
+
+  const updateChatHistory = (profileId: string, messages: Message[]) => {
+    setChatHistories(prev => ({
+      ...prev,
+      [profileId]: messages
+    }));
+    // Update user stats
+    setUserProfile(prev => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        messagesSent: prev.stats.messagesSent + 1
+      }
+    }));
   };
 
   return (
@@ -222,7 +257,7 @@ const App: React.FC = () => {
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-            {PROFILES.map(profile => (
+            {profiles.map(profile => (
               <ProfileCard key={profile.id} profile={profile} onSelect={handleProfileSelect} />
             ))}
           </div>
@@ -244,6 +279,8 @@ const App: React.FC = () => {
           setPaymentRequests={setPaymentRequests}
           userProfile={userProfile}
           setUserProfile={setUserProfile}
+          profiles={profiles}
+          setProfiles={setProfiles}
           onBack={() => setView('profile-selection')}
         />
       )}
@@ -269,6 +306,8 @@ const App: React.FC = () => {
             userName={userProfile.name}
             isPremium={userProfile.tier === 'Diamond'}
             onUpgrade={() => setView('subscription')}
+            history={chatHistories[selectedProfile.id] || []}
+            onSaveHistory={(msgs) => updateChatHistory(selectedProfile.id, msgs)}
           />
         </div>
       )}
