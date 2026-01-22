@@ -1,106 +1,94 @@
 
-import { supabase } from "./supabase";
-import { GirlfriendProfile, PaymentRequest } from "../types";
+import { GirlfriendProfile, PaymentRequest, UserProfile } from "../types";
+import { PROFILES as INITIAL_PROFILES } from "../constants";
 
-// We use a generic 'app_data' table to simulate the previous Firestore logic
-// Table schema assumption: id (text, PK), data (jsonb), updated_at (timestamptz)
+// KEYS
+const K_PROFILES = 'priyo_cloud_profiles';
+const K_USERS = 'priyo_cloud_users';
+const K_REQUESTS = 'priyo_cloud_requests';
+const K_SESSION = 'priyo_cloud_session';
+
+// --- DATA INITIALIZATION ---
+const getStorage = <T>(key: string, defaultVal: T): T => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultVal;
+  } catch { return defaultVal; }
+};
+
+const setStorage = (key: string, val: any) => {
+  localStorage.setItem(key, JSON.stringify(val));
+};
 
 export const cloudStore = {
-  // Save all profiles to Supabase
+  // --- PROFILES ---
+  async getProfiles(): Promise<GirlfriendProfile[]> {
+    return getStorage<GirlfriendProfile[]>(K_PROFILES, INITIAL_PROFILES);
+  },
+
   async saveProfiles(profiles: GirlfriendProfile[]) {
-    if (!supabase) return;
+    setStorage(K_PROFILES, profiles);
+    return true;
+  },
+
+  // --- USERS (AUTH & DATA) ---
+  async createUser(user: UserProfile): Promise<UserProfile> {
+    const users = getStorage<UserProfile[]>(K_USERS, []);
+    if (users.find(u => u.id === user.id)) return user;
     
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.warn("⚠️ Cloud Sync Skipped: User is not authenticated.");
-      return;
-    }
-
-    try {
-      // Ensure we are saving JSON data correctly
-      const { error } = await supabase
-        .from('app_data')
-        .upsert({ 
-          id: 'profiles', 
-          data: profiles, 
-          updated_at: new Date().toISOString() 
-        });
-
-      if (error) throw error;
-      console.log("✅ Profiles synced to Supabase");
-    } catch (e: any) {
-      console.error("❌ Failed to save to Cloud:", e.message);
-      throw e; // Re-throw to alert user
-    }
+    users.push(user);
+    setStorage(K_USERS, users);
+    return user;
   },
 
-  // Load profiles from Supabase
-  async loadProfiles(): Promise<GirlfriendProfile[] | null> {
-    if (!supabase) return null;
-
-    try {
-      const { data, error } = await supabase
-        .from('app_data')
-        .select('data')
-        .eq('id', 'profiles')
-        .single();
-
-      if (error) throw error;
-      
-      if (data && data.data) {
-        console.log("📥 Loaded profiles from Supabase");
-        return data.data as GirlfriendProfile[];
-      }
-    } catch (e: any) {
-      if (e.code === 'PGRST116') {
-         // No rows found, which is fine for first load
-         console.log("ℹ️ No cloud profiles found. Using local defaults.");
-      } else {
-         console.error("❌ Failed to load from Cloud:", e.message);
-      }
-    }
-    return null;
+  async getUser(id: string): Promise<UserProfile | undefined> {
+    const users = getStorage<UserProfile[]>(K_USERS, []);
+    return users.find(u => u.id === id);
   },
 
-  // Save Payment Requests to Supabase (simulating a table)
+  async updateUser(id: string, updates: Partial<UserProfile>): Promise<UserProfile | null> {
+    const users = getStorage<UserProfile[]>(K_USERS, []);
+    const idx = users.findIndex(u => u.id === id);
+    
+    if (idx === -1) return null;
+    
+    const updatedUser = { ...users[idx], ...updates };
+    users[idx] = updatedUser;
+    setStorage(K_USERS, users);
+    return updatedUser;
+  },
+
+  async login(email: string): Promise<UserProfile | null> {
+    // Simple simulation: find user by ID which we use as email for simplicity in this no-backend version
+    // In real usage, we search the array
+    // Since we don't have email in UserProfile explicitly in this simplified type, we simulate auth
+    // For this build, we just assume the user ID matches the one generated/stored.
+    const users = getStorage<UserProfile[]>(K_USERS, []);
+    // Mock: just return the first user if exists or null
+    // In a real local simulation, we'd need to store credentials. 
+    // We will handle Auth logic in AuthScreen, here we just provide storage access.
+    return null; 
+  },
+
+  // --- PAYMENTS ---
+  async getPaymentRequests(): Promise<PaymentRequest[]> {
+    return getStorage<PaymentRequest[]>(K_REQUESTS, []);
+  },
+
   async savePaymentRequests(requests: PaymentRequest[]) {
-    if (!supabase) return;
-
-    try {
-      const { error } = await supabase
-        .from('app_data')
-        .upsert({ 
-          id: 'payment_requests', 
-          data: requests, 
-          updated_at: new Date().toISOString() 
-        });
-
-      if (error) throw error;
-    } catch (e: any) {
-      console.error("❌ Failed to save payment requests:", e.message);
-    }
+    setStorage(K_REQUESTS, requests);
   },
 
-  // Load Payment Requests
-  async loadPaymentRequests(): Promise<PaymentRequest[] | null> {
-    if (!supabase) return null;
+  // --- SESSION ---
+  setSession(userId: string) {
+    localStorage.setItem(K_SESSION, userId);
+  },
 
-    try {
-      const { data, error } = await supabase
-        .from('app_data')
-        .select('data')
-        .eq('id', 'payment_requests')
-        .single();
+  getSession(): string | null {
+    return localStorage.getItem(K_SESSION);
+  },
 
-      if (error) throw error;
-      
-      if (data && data.data) {
-        return data.data as PaymentRequest[];
-      }
-    } catch (e: any) {
-      // Ignore not found error
-    }
-    return null;
+  clearSession() {
+    localStorage.removeItem(K_SESSION);
   }
 };
