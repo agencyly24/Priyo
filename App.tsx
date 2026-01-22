@@ -27,7 +27,7 @@ const DEFAULT_USER: UserProfile = {
   tier: 'Free',
   isPremium: false,
   isVIP: false,
-  isAdmin: false, // CHANGED: Default to false to prevent write errors on load
+  isAdmin: false, 
   // Initial Wallet State
   credits: 5, // Bonus starter credits
   unlockedContentIds: [],
@@ -41,32 +41,35 @@ const DEFAULT_USER: UserProfile = {
 
 const PROFILE_CATEGORIES = ['All', 'Sweet', 'Romantic', 'Flirty', 'Sexy', 'Horny', 'Wife'];
 
+// Helper to prevent crash on bad JSON
+const safeJsonParse = <T>(key: string, fallback: T): T => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch (error) {
+    console.warn(`Failed to parse ${key} from localStorage, using fallback.`, error);
+    return fallback;
+  }
+};
+
 const App: React.FC = () => {
   const [view, setView] = useState<View>(() => {
-    const savedView = localStorage.getItem('priyo_current_view');
-    return (savedView as View) || 'landing';
+    return (localStorage.getItem('priyo_current_view') as View) || 'landing';
   });
   
   const [profiles, setProfiles] = useState<GirlfriendProfile[]>(() => {
-    const savedProfiles = localStorage.getItem('priyo_dynamic_profiles');
-    if (savedProfiles) {
-       try {
-         return JSON.parse(savedProfiles);
-       } catch (e) {
-         return INITIAL_PROFILES;
-       }
-    }
-    return INITIAL_PROFILES;
+    return safeJsonParse('priyo_dynamic_profiles', INITIAL_PROFILES);
   });
 
   const [chatHistories, setChatHistories] = useState<Record<string, Message[]>>(() => {
-    const saved = localStorage.getItem('priyo_chat_histories');
-    return saved ? JSON.parse(saved) : {};
+    return safeJsonParse('priyo_chat_histories', {});
   });
 
   const [selectedProfile, setSelectedProfile] = useState<GirlfriendProfile | null>(() => {
     const savedId = localStorage.getItem('priyo_selected_profile_id');
-    return profiles.find(p => p.id === savedId) || null;
+    // We need to access the current 'profiles' state here, but in initializer we use the logic directly
+    const savedProfiles = safeJsonParse('priyo_dynamic_profiles', INITIAL_PROFILES);
+    return savedProfiles.find((p: GirlfriendProfile) => p.id === savedId) || null;
   });
 
   const [activeCategory, setActiveCategory] = useState('All');
@@ -74,28 +77,24 @@ const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('priyo_is_logged_in') === 'true');
   const [hasConfirmedAge, setHasConfirmedAge] = useState(() => localStorage.getItem('priyo_age_confirmed') === 'true');
   const [isLoadingCloud, setIsLoadingCloud] = useState(false);
-  const [showCreditModal, setShowCreditModal] = useState(false); // New State
-  const [showNameModal, setShowNameModal] = useState(false); // New: Show name input after login
-  const [tempNameInput, setTempNameInput] = useState(''); // New: Temp name storage
+  const [showCreditModal, setShowCreditModal] = useState(false); 
+  const [showNameModal, setShowNameModal] = useState(false); 
+  const [tempNameInput, setTempNameInput] = useState(''); 
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('priyo_user_profile');
-    return saved ? JSON.parse(saved) : DEFAULT_USER;
+    return safeJsonParse('priyo_user_profile', DEFAULT_USER);
   });
 
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>(() => {
-    const saved = localStorage.getItem('priyo_payment_requests');
-    return saved ? JSON.parse(saved) : [];
+    return safeJsonParse('priyo_payment_requests', []);
   });
 
   const [referrals, setReferrals] = useState<ReferralProfile[]>(() => {
-    const saved = localStorage.getItem('priyo_referrals');
-    return saved ? JSON.parse(saved) : [];
+    return safeJsonParse('priyo_referrals', []);
   });
 
   const [referralTransactions, setReferralTransactions] = useState<ReferralTransaction[]>(() => {
-    const saved = localStorage.getItem('priyo_referral_txs');
-    return saved ? JSON.parse(saved) : [];
+    return safeJsonParse('priyo_referral_txs', []);
   });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
