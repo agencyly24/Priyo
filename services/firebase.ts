@@ -6,13 +6,13 @@ import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDDrKgO9gixnRgoNyrpT7Gx4_cUQY0n3Qg",
-  authDomain: "prioaigirl.firebaseapp.com",
-  projectId: "prioaigirl",
-  storageBucket: "prioaigirl.firebasestorage.app",
-  messagingSenderId: "768117763391",
-  appId: "1:768117763391:web:5f4e87186c66ec537a778a",
-  measurementId: "G-91237MC7R3"
+  apiKey: "AIzaSyAZyT49sNTu-1XDzdsA-1eTesAw0T1KlEs",
+  authDomain: "prio-dea67.firebaseapp.com",
+  projectId: "prio-dea67",
+  storageBucket: "prio-dea67.firebasestorage.app",
+  messagingSenderId: "694055128131",
+  appId: "1:694055128131:web:32558941fdf5cc3f0498f6",
+  measurementId: "G-FKFRGFN17G"
 };
 
 // Initialize Firebase
