@@ -4,12 +4,20 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
-  // Cast process to any to avoid "Property 'cwd' does not exist on type 'Process'" error
   const env = loadEnv(mode, (process as any).cwd(), '');
 
-  // Check for either API_KEY or GOOGLE_API_KEY
-  const apiKey = env.API_KEY || env.GOOGLE_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY || '';
+  // Support multiple variations of the API key name, including the one set in Vercel.
+  // We prioritize the names you provided to ensure no crash after environment change.
+  const apiKey = 
+    env.Generative_Language_API_Key || 
+    env.Generative_Language_API || 
+    env.API_KEY || 
+    env.GOOGLE_API_KEY || 
+    process.env.Generative_Language_API_Key || 
+    process.env.Generative_Language_API || 
+    process.env.API_KEY || 
+    process.env.GOOGLE_API_KEY || 
+    '';
 
   return {
     plugins: [react()],

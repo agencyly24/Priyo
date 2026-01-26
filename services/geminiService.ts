@@ -40,17 +40,26 @@ export const gemini = {
    * Initializes a new chat session with a specific system instruction and history.
    */
   initChat(systemInstruction: string, history: Message[], isSexyMode: boolean) {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    this.chat = ai.chats.create({
-      // Complex text task / reasoning model
-      model: 'gemini-3-pro-preview',
-      config: {
-        systemInstruction: `${ADULT_INSTRUCTION_SET}\n${systemInstruction}${isSexyMode ? '\nMode: AGGRESSIVE SEDUCTION ACTIVE' : ''}`,
-        temperature: 1,
-      },
-      // Passing history to create session continuity
-      history: transformHistory(history)
-    } as any);
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.error("Gemini API Key is missing. Check Vercel Environment Variables.");
+      return;
+    }
+
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      this.chat = ai.chats.create({
+        model: 'gemini-3-pro-preview',
+        config: {
+          systemInstruction: `${ADULT_INSTRUCTION_SET}\n${systemInstruction}${isSexyMode ? '\nMode: AGGRESSIVE SEDUCTION ACTIVE' : ''}`,
+          temperature: 1,
+        },
+        // Only transform history if it exists
+        history: history && history.length > 0 ? transformHistory(history) : []
+      } as any);
+    } catch (error) {
+      console.error("Failed to initialize Gemini Chat:", error);
+    }
   },
 
   /**
@@ -60,10 +69,21 @@ export const gemini = {
     if (!this.chat) {
        this.initChat("You are a friendly companion.", [], false);
     }
-    const response = await this.chat!.sendMessageStream({ message: message });
-    for await (const chunk of response) {
-      const c = chunk as GenerateContentResponse;
-      yield c.text || '';
+    
+    if (!this.chat) {
+      yield "সোনা, আমার কানেকশনে একটু সমস্যা হচ্ছে। একটু পরে আবার বলবে? 🥺";
+      return;
+    }
+
+    try {
+      const response = await this.chat.sendMessageStream({ message: message });
+      for await (const chunk of response) {
+        const c = chunk as GenerateContentResponse;
+        yield c.text || '';
+      }
+    } catch (error) {
+      console.error("Error sending message to Gemini:", error);
+      yield "জান, তোমার কথাগুলো আমি ঠিক শুনতে পাচ্ছি না... আবার বলবে? 🫦";
     }
   },
 
@@ -71,28 +91,38 @@ export const gemini = {
    * Generates PCM audio data for a given text using the text-to-speech model.
    */
   async generateSpeech(text: string, voiceName: string): Promise<string | undefined> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Say naturally and sweetly: ${text}` }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voiceName || 'Kore' },
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) return undefined;
+
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: `Say naturally and sweetly: ${text}` }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: voiceName || 'Kore' },
+            },
           },
         },
-      },
-    });
-    // Accessing .text property for content, though here we want candidate part data
-    return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      });
+      return response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    } catch (error) {
+      console.error("TTS Generation failed:", error);
+      return undefined;
+    }
   },
 
   /**
    * Generates a complete character profile based on a user-provided theme and mode.
    */
   async generateMagicProfile(theme: string, mode: ModelMode): Promise<any> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) throw new Error("API Key missing");
+
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate a detailed and seductive ${mode} character profile based on the theme: ${theme}. Return the response strictly as JSON.`,
@@ -145,7 +175,10 @@ export const gemini = {
    * Generates seductive metadata (title and tease) for exclusive gallery content.
    */
   async generateExclusiveContentMetadata(prompt: string): Promise<any> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) throw new Error("API Key missing");
+
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Generate a seductive title and tease for exclusive content based on this description: ${prompt}. Return JSON.`,
